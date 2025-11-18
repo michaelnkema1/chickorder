@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ordersAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 const OrderTracking = () => {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     loadOrder();
@@ -20,6 +22,29 @@ const OrderTracking = () => {
       toast.error('Failed to load order');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePayment = async (paymentMethod) => {
+    if (!order) return;
+
+    try {
+      setProcessingPayment(true);
+      const response = await ordersAPI.initiatePayment(order.id, paymentMethod);
+      
+      // If payment URL is provided (Hubtel/Paystack), redirect to it
+      if (response.data.payment_url) {
+        window.location.href = response.data.payment_url;
+      } else {
+        // For cash or mobile money, just update the order
+        toast.success('Payment initiated successfully!');
+        loadOrder(); // Reload order to get updated payment status
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to initiate payment');
+    } finally {
+      setProcessingPayment(false);
     }
   };
 
@@ -168,8 +193,86 @@ const OrderTracking = () => {
               <p className="text-sm text-gray-600">Payment Status</p>
               <p className="font-semibold capitalize">{order.payment_status}</p>
             </div>
+            {order.payment_method && (
+              <div>
+                <p className="text-sm text-gray-600">Payment Method</p>
+                <p className="font-semibold capitalize">{order.payment_method.replace('_', ' ')}</p>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Payment Section */}
+        {order.payment_status === 'pending' && (
+          <div className="card mt-6">
+            <h3 className="text-xl font-semibold mb-4">Complete Payment</h3>
+            <p className="text-gray-600 mb-4">
+              Choose a payment method to complete your order:
+            </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              <button
+                onClick={() => handlePayment('cash')}
+                disabled={processingPayment}
+                className="btn btn-outline p-4 text-left"
+              >
+                <div className="font-semibold mb-1">💵 Cash</div>
+                <div className="text-sm text-gray-600">Pay when you pickup</div>
+              </button>
+              <button
+                onClick={() => handlePayment('mobile_money')}
+                disabled={processingPayment}
+                className="btn btn-outline p-4 text-left"
+              >
+                <div className="font-semibold mb-1">📱 Mobile Money</div>
+                <div className="text-sm text-gray-600">Pay via mobile money</div>
+              </button>
+              <button
+                onClick={() => handlePayment('hubtel')}
+                disabled={processingPayment}
+                className="btn btn-outline p-4 text-left"
+              >
+                <div className="font-semibold mb-1">🏦 Hubtel</div>
+                <div className="text-sm text-gray-600">Pay via Hubtel</div>
+              </button>
+              <button
+                onClick={() => handlePayment('paystack')}
+                disabled={processingPayment}
+                className="btn btn-outline p-4 text-left"
+              >
+                <div className="font-semibold mb-1">💳 Paystack</div>
+                <div className="text-sm text-gray-600">Pay via Paystack</div>
+              </button>
+            </div>
+            {processingPayment && (
+              <div className="mt-4 text-center text-gray-600">
+                Processing payment...
+              </div>
+            )}
+          </div>
+        )}
+
+        {order.payment_status === 'processing' && (
+          <div className="card mt-6 bg-yellow-50 border-yellow-200">
+            <h3 className="text-xl font-semibold mb-2 text-yellow-800">Payment Processing</h3>
+            <p className="text-yellow-700">
+              Your payment is being processed. You'll be notified once it's confirmed.
+            </p>
+            {order.payment_reference && (
+              <p className="text-sm text-yellow-600 mt-2">
+                Reference: {order.payment_reference}
+              </p>
+            )}
+          </div>
+        )}
+
+        {order.payment_status === 'completed' && (
+          <div className="card mt-6 bg-green-50 border-green-200">
+            <h3 className="text-xl font-semibold mb-2 text-green-800">✅ Payment Completed</h3>
+            <p className="text-green-700">
+              Your payment has been confirmed. Your order is being prepared.
+            </p>
+          </div>
+        )}
 
         {order.notes && (
           <div className="mt-6 pt-6 border-t">

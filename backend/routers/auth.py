@@ -73,10 +73,10 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
             detail="User account is inactive"
         )
     
-    # Create access token
+    # Create access token (sub must be string for JWT)
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id},
+        data={"sub": str(user.id)},  # Convert to string for JWT compliance
         expires_delta=access_token_expires
     )
     

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productsAPI, ordersAPI } from '../services/api';
+import { getProductImage } from '../utils/imageMapper';
 import toast from 'react-hot-toast';
 
 const Order = ({ user }) => {
@@ -123,26 +124,37 @@ const Order = ({ user }) => {
         <div className="lg:col-span-2">
           <h2 className="text-2xl font-semibold mb-4">Select Live Chickens</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {products.map((product) => (
-              <div key={product.id} className="card">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-semibold">{product.name}</h3>
-                  <span className="text-xl font-bold text-primary-600">
-                    GHS {product.price.toFixed(2)}
-                  </span>
+            {products.map((product) => {
+              const imagePath = getProductImage(product.name);
+              return (
+                <div key={product.id} className="card">
+                  <img
+                    src={imagePath}
+                    alt={product.name}
+                    className="w-full h-40 object-cover rounded-lg mb-4"
+                    onError={(e) => {
+                      e.target.src = '/layer.jpeg';
+                    }}
+                  />
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-semibold">{product.name}</h3>
+                    <span className="text-xl font-bold text-primary-600">
+                      GHS {product.price.toFixed(2)}
+                    </span>
+                  </div>
+                  {product.description && (
+                    <p className="text-sm text-gray-600 mb-4">{product.description}</p>
+                  )}
+                  <button
+                    onClick={() => addToCart(product)}
+                    className="btn btn-primary w-full"
+                    disabled={!product.is_available}
+                  >
+                    {product.is_available ? 'Add to Cart' : 'Unavailable'}
+                  </button>
                 </div>
-                {product.description && (
-                  <p className="text-sm text-gray-600 mb-4">{product.description}</p>
-                )}
-                <button
-                  onClick={() => addToCart(product)}
-                  className="btn btn-primary w-full"
-                  disabled={!product.is_available}
-                >
-                  {product.is_available ? 'Add to Cart' : 'Unavailable'}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

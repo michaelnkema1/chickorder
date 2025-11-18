@@ -24,12 +24,18 @@ const Login = ({ onLogin }) => {
       const response = await authAPI.login(formData);
       const { access_token } = response.data;
       
+      // Store token first so getMe can use it
+      localStorage.setItem('token', access_token);
+      
       // Get user info
       const userResponse = await authAPI.getMe();
       onLogin(userResponse.data, access_token);
       toast.success('Login successful!');
     } catch (error) {
+      console.error('Login error:', error);
       toast.error(error.response?.data?.detail || 'Login failed');
+      // Clear token if login failed
+      localStorage.removeItem('token');
     } finally {
       setLoading(false);
     }

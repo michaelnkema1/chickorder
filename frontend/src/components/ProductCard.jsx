@@ -1,13 +1,19 @@
+import { getProductImage } from '../utils/imageMapper';
+
 const ProductCard = ({ product }) => {
+  const imagePath = getProductImage(product.name);
+
   return (
     <div className="card hover:shadow-lg transition-shadow">
-      {product.image_url && (
-        <img
-          src={product.image_url}
-          alt={product.name}
-          className="w-full h-48 object-cover rounded-lg mb-4"
-        />
-      )}
+      <img
+        src={imagePath}
+        alt={product.name}
+        className="w-full h-48 object-cover rounded-lg mb-4"
+        onError={(e) => {
+          // Fallback to a placeholder if image fails to load
+          e.target.src = '/layer.jpeg';
+        }}
+      />
       <div className="flex justify-between items-start mb-2">
         <h3 className="text-xl font-semibold">{product.name}</h3>
         <span className="text-2xl font-bold text-primary-600">

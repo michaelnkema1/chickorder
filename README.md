@@ -28,7 +28,41 @@ This project consists of two main components:
 - Node.js 18+
 - PostgreSQL (optional - SQLite used by default for development)
 
-### Backend Setup
+### 🎯 Easiest Way - Run Everything at Once
+
+**Linux/Mac:**
+```bash
+./run.sh
+```
+
+**Windows:**
+```cmd
+run.bat
+```
+
+**Cross-platform (Python):**
+```bash
+python run.py
+```
+
+This will automatically:
+- Set up virtual environments if needed
+- Install dependencies
+- Initialize the database
+- Start both backend and frontend servers
+
+The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+
+**Default Admin Credentials:**
+- Email: `admin@chickorder.com`
+- Password: `admin123`
+
+### Alternative - Run Separately
+
+#### Backend Setup
 
 ```bash
 cd backend
@@ -39,11 +73,7 @@ python run.py
 
 The backend will start at `http://localhost:8000`
 
-**Default Admin Credentials:**
-- Email: `admin@chickorder.com`
-- Password: `admin123`
-
-### Frontend Setup
+#### Frontend Setup
 
 ```bash
 cd frontend

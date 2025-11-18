@@ -31,11 +31,19 @@ const Register = ({ onLogin }) => {
       });
       
       const { access_token } = loginResponse.data;
+      
+      // Store token first so getMe can use it
+      localStorage.setItem('token', access_token);
+      
+      // Get user info
       const userResponse = await authAPI.getMe();
       onLogin(userResponse.data, access_token);
       toast.success('Registration successful!');
     } catch (error) {
+      console.error('Registration error:', error);
       toast.error(error.response?.data?.detail || 'Registration failed');
+      // Clear token if registration/login failed
+      localStorage.removeItem('token');
     } finally {
       setLoading(false);
     }
