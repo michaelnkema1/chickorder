@@ -7,11 +7,10 @@ from database import Base
 
 
 class OrderStatus(str, enum.Enum):
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
-    PREPARING = "preparing"
-    READY = "ready"
-    COMPLETED = "completed"
+    PENDING = "pending"  # Order placed
+    CONFIRMED = "confirmed"  # Order confirmed
+    READY = "ready"  # Ready for pickup
+    COMPLETED = "completed"  # Order completed/picked up
     CANCELLED = "cancelled"
 
 

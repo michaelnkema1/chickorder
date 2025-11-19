@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import auth, products, orders, admin
+from routers import auth, products, orders, admin, payments
 from config import settings
 import logging
 
@@ -34,6 +34,7 @@ app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(admin.router)
+app.include_router(payments.router)
 
 
 @app.get("/")

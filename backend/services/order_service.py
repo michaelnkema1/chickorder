@@ -87,11 +87,10 @@ class OrderService:
         if not order:
             raise ValueError("Order not found")
         
-        # State machine validation
+        # State machine validation - simplified flow
         valid_transitions = {
             OrderStatus.PENDING: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
-            OrderStatus.CONFIRMED: [OrderStatus.PREPARING, OrderStatus.CANCELLED],
-            OrderStatus.PREPARING: [OrderStatus.READY, OrderStatus.CANCELLED],
+            OrderStatus.CONFIRMED: [OrderStatus.READY, OrderStatus.CANCELLED],
             OrderStatus.READY: [OrderStatus.COMPLETED],
             OrderStatus.COMPLETED: [],
             OrderStatus.CANCELLED: []

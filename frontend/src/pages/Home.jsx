@@ -34,7 +34,7 @@ const Home = () => {
           <div className="text-4xl mb-4">📱</div>
           <h3 className="text-xl font-semibold mb-2">Easy Payment</h3>
           <p className="text-gray-600">
-            Pay securely with mobile money, cards, or cash on pickup.
+            Pay with mobile money or cash when you pickup your order.
           </p>
         </div>
         <div className="card text-center">

@@ -35,7 +35,6 @@ const AdminOrders = () => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
-      preparing: 'bg-purple-100 text-purple-800',
       ready: 'bg-green-100 text-green-800',
       completed: 'bg-gray-100 text-gray-800',
       cancelled: 'bg-red-100 text-red-800',
@@ -46,8 +45,7 @@ const AdminOrders = () => {
   const getNextStatus = (currentStatus) => {
     const statusFlow = {
       pending: 'confirmed',
-      confirmed: 'preparing',
-      preparing: 'ready',
+      confirmed: 'ready',
       ready: 'completed',
     };
     return statusFlow[currentStatus];
@@ -84,6 +82,25 @@ const AdminOrders = () => {
                     <p className="text-sm text-gray-500">
                       {new Date(order.created_at).toLocaleString()}
                     </p>
+                    {order.payment_method && (
+                      <p className="text-sm mt-1">
+                        <span className="text-gray-600">Payment:</span>{' '}
+                        <span className="font-semibold capitalize">
+                          {order.payment_method.replace('_', ' ')}
+                        </span>
+                        {order.payment_status && (
+                          <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                            order.payment_status === 'completed' 
+                              ? 'bg-green-100 text-green-800' 
+                              : order.payment_status === 'processing'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.payment_status}
+                          </span>
+                        )}
+                      </p>
+                    )}
                   </div>
                   <span className={`px-4 py-2 rounded-full font-semibold ${getStatusColor(order.status)}`}>
                     {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
@@ -111,21 +128,20 @@ const AdminOrders = () => {
                     <span className="text-xl font-bold text-primary-600">
                       GHS {order.total_amount.toFixed(2)}
                     </span>
+                    {order.payment_reference && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Reference: {order.payment_reference}
+                      </p>
+                    )}
                   </div>
                   {nextStatus && (
                     <button
                       onClick={() => updateOrderStatus(order.id, nextStatus)}
                       className="btn btn-primary"
                     >
-                      Mark as {nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1)}
-                    </button>
-                  )}
-                  {order.status === 'ready' && (
-                    <button
-                      onClick={() => updateOrderStatus(order.id, 'completed')}
-                      className="btn btn-primary"
-                    >
-                      Mark as Completed
+                      {nextStatus === 'confirmed' && 'Confirm Order'}
+                      {nextStatus === 'ready' && 'Mark Ready for Pickup'}
+                      {nextStatus === 'completed' && 'Customer Picked Up'}
                     </button>
                   )}
                 </div>

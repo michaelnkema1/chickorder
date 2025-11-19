@@ -30,8 +30,7 @@ class NotificationService:
     async def send_status_update(self, order: Order) -> bool:
         """Send order status update SMS"""
         status_messages = {
-            OrderStatus.CONFIRMED: "Your order has been confirmed. We're preparing to kill and dress your chickens.",
-            OrderStatus.PREPARING: "Your chickens are being killed and dressed. Almost ready!",
+            OrderStatus.CONFIRMED: "Your order has been confirmed. We're preparing your chickens.",
             OrderStatus.READY: f"🎉 Your chickens are ready! Order #{order.order_number} has been killed, dressed, and is ready for pickup!",
             OrderStatus.COMPLETED: "Thank you! Your order has been completed.",
             OrderStatus.CANCELLED: f"Your order #{order.order_number} has been cancelled."

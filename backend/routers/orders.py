@@ -147,6 +147,13 @@ async def initiate_payment(
             detail="Order not found"
         )
     
+    # Check if payment is already completed
+    if order.payment_status == PaymentStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment has already been completed for this order"
+        )
+    
     try:
         from models import PaymentMethod
         payment_method_enum = PaymentMethod(payment_method)
@@ -155,13 +162,26 @@ async def initiate_payment(
         # Update order with payment reference
         order.payment_method = payment_method_enum
         order.payment_reference = result["payment_reference"]
-        order.payment_status = PaymentStatus.PROCESSING
+        
+        # For cash payments, keep status as pending (paid on pickup)
+        # For other methods, set to processing
+        if payment_method_enum == PaymentMethod.CASH:
+            order.payment_status = PaymentStatus.PENDING
+        else:
+            order.payment_status = PaymentStatus.PROCESSING
+        
         db.commit()
+        db.refresh(order)
         
         return result
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Payment initiation failed: {str(e)}"
         )
 

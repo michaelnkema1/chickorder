@@ -263,11 +263,8 @@ const Order = ({ user }) => {
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                     >
-                      <option value="cash">Cash</option>
+                      <option value="cash">Cash on Arrival</option>
                       <option value="mobile_money">Mobile Money</option>
-                      <option value="card">Card</option>
-                      <option value="hubtel">Hubtel</option>
-                      <option value="paystack">Paystack</option>
                     </select>
                   </div>
                   <div>

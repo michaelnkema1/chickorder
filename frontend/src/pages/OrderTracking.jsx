@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ordersAPI } from '../services/api';
+import MobileMoneyPrompt from '../components/MobileMoneyPrompt';
 import toast from 'react-hot-toast';
 
 const OrderTracking = () => {
@@ -8,6 +9,7 @@ const OrderTracking = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showMobileMoneyPrompt, setShowMobileMoneyPrompt] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
@@ -26,33 +28,69 @@ const OrderTracking = () => {
   };
 
   const handlePayment = async (paymentMethod) => {
-    if (!order) return;
+    if (!order) {
+      toast.error('Order not loaded');
+      return;
+    }
+
+    // Check if payment is already processing or completed
+    if (order.payment_status === 'processing' || order.payment_status === 'completed') {
+      toast('Payment has already been initiated for this order', { icon: 'ℹ️' });
+      return;
+    }
 
     try {
       setProcessingPayment(true);
-      const response = await ordersAPI.initiatePayment(order.id, paymentMethod);
+      console.log('Initiating payment:', { orderId: order.id, paymentMethod });
       
-      // If payment URL is provided (Hubtel/Paystack), redirect to it
+      const response = await ordersAPI.initiatePayment(order.id, paymentMethod);
+      console.log('Payment response:', response.data);
+      
+      // If payment URL is provided, redirect to it
       if (response.data.payment_url) {
         window.location.href = response.data.payment_url;
-      } else {
-        // For cash or mobile money, just update the order
-        toast.success('Payment initiated successfully!');
+      } else if (paymentMethod === 'mobile_money') {
+        // Show mobile money verification prompt
+        if (response.data.message) {
+          toast.success(response.data.message, { duration: 5000 });
+        }
+        setShowMobileMoneyPrompt(true);
+        loadOrder(); // Reload order to get updated payment status
+      } else if (paymentMethod === 'cash') {
+        // For cash, just update the order
+        toast.success('Payment will be collected when you pickup your order!');
         loadOrder(); // Reload order to get updated payment status
       }
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error(error.response?.data?.detail || 'Failed to initiate payment');
+      console.error('Error response:', error.response);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to initiate payment';
+      console.error('Full error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      toast.error(errorMessage);
     } finally {
       setProcessingPayment(false);
     }
+  };
+
+  const handleMobileMoneyComplete = async () => {
+    setShowMobileMoneyPrompt(false);
+    
+    // In production, this would be handled by the payment gateway callback
+    // For now, we'll simulate payment completion
+    // You can manually mark as completed via admin panel or API
+    
+    toast.success('Mobile money payment verification completed!');
+    loadOrder(); // Reload order to get updated payment status
   };
 
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
-      preparing: 'bg-purple-100 text-purple-800',
       ready: 'bg-green-100 text-green-800',
       completed: 'bg-gray-100 text-gray-800',
       cancelled: 'bg-red-100 text-red-800',
@@ -65,7 +103,6 @@ const OrderTracking = () => {
     const steps = [
       { key: 'pending', label: 'Order Placed' },
       { key: 'confirmed', label: 'Confirmed' },
-      { key: 'preparing', label: 'Killing & Dressing' },
       { key: 'ready', label: 'Ready for Pickup' },
       { key: 'completed', label: 'Completed' },
     ];
@@ -203,7 +240,7 @@ const OrderTracking = () => {
         </div>
 
         {/* Payment Section */}
-        {order.payment_status === 'pending' && (
+        {(order.payment_status === 'pending' || !order.payment_status) && (
           <div className="card mt-6">
             <h3 className="text-xl font-semibold mb-4">Complete Payment</h3>
             <p className="text-gray-600 mb-4">
@@ -215,8 +252,8 @@ const OrderTracking = () => {
                 disabled={processingPayment}
                 className="btn btn-outline p-4 text-left"
               >
-                <div className="font-semibold mb-1">💵 Cash</div>
-                <div className="text-sm text-gray-600">Pay when you pickup</div>
+                <div className="font-semibold mb-1">💵 Cash on Arrival</div>
+                <div className="text-sm text-gray-600">Pay when you pickup your order</div>
               </button>
               <button
                 onClick={() => handlePayment('mobile_money')}
@@ -224,23 +261,7 @@ const OrderTracking = () => {
                 className="btn btn-outline p-4 text-left"
               >
                 <div className="font-semibold mb-1">📱 Mobile Money</div>
-                <div className="text-sm text-gray-600">Pay via mobile money</div>
-              </button>
-              <button
-                onClick={() => handlePayment('hubtel')}
-                disabled={processingPayment}
-                className="btn btn-outline p-4 text-left"
-              >
-                <div className="font-semibold mb-1">🏦 Hubtel</div>
-                <div className="text-sm text-gray-600">Pay via Hubtel</div>
-              </button>
-              <button
-                onClick={() => handlePayment('paystack')}
-                disabled={processingPayment}
-                className="btn btn-outline p-4 text-left"
-              >
-                <div className="font-semibold mb-1">💳 Paystack</div>
-                <div className="text-sm text-gray-600">Pay via Paystack</div>
+                <div className="text-sm text-gray-600">Pay via mobile money (MTN/Vodafone/AirtelTigo)</div>
               </button>
             </div>
             {processingPayment && (
@@ -281,6 +302,17 @@ const OrderTracking = () => {
           </div>
         )}
       </div>
+
+      {/* Mobile Money Verification Prompt */}
+      {showMobileMoneyPrompt && order && (
+        <MobileMoneyPrompt
+          order={order}
+          phone={order.customer_phone}
+          amount={order.total_amount}
+          onComplete={handleMobileMoneyComplete}
+          onCancel={() => setShowMobileMoneyPrompt(false)}
+        />
+      )}
     </div>
   );
 };

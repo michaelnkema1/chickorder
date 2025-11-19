@@ -20,9 +20,9 @@ async def get_dashboard_stats(
     # Total orders
     total_orders = db.query(func.count(Order.id)).scalar() or 0
     
-    # Pending orders
+    # Pending orders (orders not yet completed)
     pending_orders = db.query(func.count(Order.id)).filter(
-        Order.status.in_([OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PREPARING])
+        Order.status.in_([OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.READY])
     ).scalar() or 0
     
     # Completed orders
@@ -90,7 +90,7 @@ async def get_pending_orders(
     orders = db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product)
     ).filter(
-        Order.status.in_([OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PREPARING])
+        Order.status.in_([OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.READY])
     ).order_by(Order.created_at.asc()).all()
     return [OrderResponse.from_orm_with_items(order) for order in orders]
 
