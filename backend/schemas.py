@@ -186,3 +186,9 @@ class DashboardStats(BaseModel):
     average_wait_time: Optional[float] = None
     digital_payment_percentage: float
 
+
+class DailySalesStats(BaseModel):
+    total_chickens_sold: int
+    breakdown: dict  # {product_name: quantity}
+    total_revenue: float
+

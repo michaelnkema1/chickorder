@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from database import get_db
 from models import Order, OrderStatus, PaymentStatus, PaymentMethod, User, OrderItem
-from schemas import DashboardStats, OrderResponse
+from schemas import DashboardStats, OrderResponse, DailySalesStats
 from auth import get_current_admin
 from datetime import datetime, timedelta
 from typing import List
@@ -93,4 +93,51 @@ async def get_pending_orders(
         Order.status.in_([OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.READY])
     ).order_by(Order.created_at.asc()).all()
     return [OrderResponse.from_orm_with_items(order) for order in orders]
+
+
+@router.get("/sales/today", response_model=DailySalesStats)
+async def get_today_sales_stats(
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin)
+):
+    """Get today's sales statistics with breakdown by product (admin only)"""
+    # Get today's start time
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Get all orders from today (any status)
+    today_orders = db.query(Order).options(
+        joinedload(Order.items).joinedload(OrderItem.product)
+    ).filter(
+        Order.created_at >= today_start
+    ).all()
+    
+    # Calculate statistics
+    total_chickens_sold = 0
+    breakdown = {}
+    total_revenue = 0.0
+    
+    for order in today_orders:
+        # Only count revenue for completed payments
+        if order.payment_status == PaymentStatus.COMPLETED:
+            total_revenue += order.total_amount
+        
+        # Count chickens from order items
+        for item in order.items:
+            if item.product:
+                product_name = item.product.name
+                quantity = item.quantity
+                
+                total_chickens_sold += quantity
+                
+                # Add to breakdown
+                if product_name in breakdown:
+                    breakdown[product_name] += quantity
+                else:
+                    breakdown[product_name] = quantity
+    
+    return DailySalesStats(
+        total_chickens_sold=total_chickens_sold,
+        breakdown=breakdown,
+        total_revenue=float(total_revenue)
+    )
 

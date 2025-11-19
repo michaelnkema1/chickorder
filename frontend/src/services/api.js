@@ -60,6 +60,7 @@ export const ordersAPI = {
 export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
   getPendingOrders: () => api.get('/admin/orders/pending'),
+  getTodaySales: () => api.get('/admin/sales/today'),
 };
 
 export default api;

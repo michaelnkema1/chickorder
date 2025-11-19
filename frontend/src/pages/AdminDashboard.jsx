@@ -5,10 +5,12 @@ import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
+  const [salesStats, setSalesStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadStats();
+    loadSalesStats();
   }, []);
 
   const loadStats = async () => {
@@ -19,6 +21,15 @@ const AdminDashboard = () => {
       toast.error('Failed to load dashboard stats');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSalesStats = async () => {
+    try {
+      const response = await adminAPI.getTodaySales();
+      setSalesStats(response.data);
+    } catch (error) {
+      console.error('Failed to load sales stats:', error);
     }
   };
 
@@ -42,6 +53,42 @@ const AdminDashboard = () => {
           Manage Orders
         </Link>
       </div>
+
+      {/* Today's Sales Statistics */}
+      {salesStats && (
+        <div className="card mb-8 bg-gradient-to-r from-primary-50 to-blue-50 border-primary-200">
+          <h2 className="text-2xl font-bold mb-4">📊 Today's Sales</h2>
+          <div className="grid md:grid-cols-3 gap-6 mb-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <p className="text-sm text-gray-600 mb-1">Total Chickens Sold</p>
+              <p className="text-3xl font-bold text-primary-600">{salesStats.total_chickens_sold}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
+              <p className="text-3xl font-bold text-green-600">GHS {salesStats.total_revenue.toFixed(2)}</p>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <p className="text-sm text-gray-600 mb-1">Date</p>
+              <p className="text-lg font-semibold">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+          </div>
+          
+          {/* Breakdown by Product */}
+          {Object.keys(salesStats.breakdown).length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold mb-3">Breakdown by Type</h3>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {Object.entries(salesStats.breakdown).map(([productName, quantity]) => (
+                  <div key={productName} className="bg-white rounded-lg p-3 shadow-sm text-center">
+                    <p className="text-sm text-gray-600 mb-1">{productName}</p>
+                    <p className="text-2xl font-bold text-primary-600">{quantity}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
