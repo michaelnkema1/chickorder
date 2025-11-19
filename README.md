@@ -35,16 +35,6 @@ This project consists of two main components:
 ./run.sh
 ```
 
-**Windows:**
-```cmd
-run.bat
-```
-
-**Cross-platform (Python):**
-```bash
-python run.py
-```
-
 This will automatically:
 - Set up virtual environments if needed
 - Install dependencies
@@ -122,13 +112,6 @@ chickorder/
 - **HTTP Client**: Axios
 - **Notifications**: React Hot Toast
 
-## 📋 Available Products
-
-- **Layer**: GHS 130.00
-- **Broiler**: GHS 250.00
-- **Cockerel**: GHS 250.00
-- **Guinea Fowl**: GHS 250.00
-- **Saso Layers**: GHS 200.00
 
 ## 🔄 Order Flow
 
