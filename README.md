@@ -8,7 +8,7 @@ A web-based ordering and preparation management system for live chicken sellers.
 - **Fresh Preparation**: We kill and dress chickens fresh when you order
 - **Real-time Tracking**: Track your order status from placement to pickup
 - **SMS Notifications**: Get notified when your chickens are ready
-- **Multiple Payment Options**: Cash, Mobile Money, Card, Hubtel, Paystack
+- **Payment Options**: Cash on Arrival or Mobile Money
 - **Admin Dashboard**: Manage orders, view statistics, and track performance
 - **User Authentication**: Secure login and registration system
 - **Responsive Design**: Works seamlessly on mobile and desktop
@@ -111,7 +111,7 @@ chickorder/
 - **Database**: SQLite (dev) / PostgreSQL (production)
 - **ORM**: SQLAlchemy
 - **Authentication**: JWT (python-jose)
-- **Payments**: Hubtel, Paystack integration
+- **Payments**: Mobile Money (via Hubtel), Cash on Arrival
 - **Notifications**: Twilio (SMS), WhatsApp Cloud API
 
 ### Frontend
@@ -134,9 +134,8 @@ chickorder/
 
 1. **Order Placed**: Customer places order for live chickens
 2. **Confirmed**: Order is confirmed, preparation begins
-3. **Preparing**: Chickens are being killed and dressed
-4. **Ready**: Chickens are dressed and ready for pickup
-5. **Completed**: Customer picks up the order
+3. **Ready**: Chickens are killed, dressed, and ready for pickup (customer notified via SMS)
+4. **Completed**: Customer picks up the order
 
 ## 📡 API Endpoints
 
@@ -162,6 +161,7 @@ chickorder/
 ### Admin
 - `GET /admin/dashboard` - Get dashboard statistics
 - `GET /admin/orders/pending` - Get pending orders
+- `GET /admin/sales/today` - Get today's sales statistics with breakdown by product type
 
 Full API documentation available at `http://localhost:8000/docs`
 
@@ -169,11 +169,27 @@ Full API documentation available at `http://localhost:8000/docs`
 
 ### Backend (.env)
 ```env
+# Database
 DATABASE_URL=sqlite:///./chickorder.db
+
+# JWT Authentication
 SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Admin Credentials
 ADMIN_EMAIL=admin@chickorder.com
 ADMIN_PASSWORD=admin123
-# Payment and notification credentials...
+
+# Payment Providers (Optional - for production)
+HUBTEL_API_KEY=
+HUBTEL_CLIENT_ID=
+HUBTEL_CLIENT_SECRET=
+
+# Notifications (Optional - for production)
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
 ```
 
 ### Frontend (.env.local)
@@ -184,42 +200,27 @@ VITE_API_URL=http://localhost:8000
 ## 📱 Features in Detail
 
 ### Customer Features
-- Browse available live chickens
+- Browse available live chickens with images
 - Place orders with special instructions
-- Track order status in real-time
-- Receive SMS notifications
-- Multiple payment options
-- Order history
+- Track order status in real-time (Order Placed → Confirmed → Ready → Completed)
+- Receive SMS notifications when order is ready
+- Payment options: Cash on Arrival or Mobile Money
+- View order history and payment status
 
 ### Admin Features
-- Dashboard with key metrics
-- Order management and status updates
-- Product management (CRUD)
-- Customer order tracking
-- Payment status monitoring
-- Performance analytics
+- **Dashboard**: View today's sales statistics with breakdown by chicken type
+- **Order Management**: Update order status (Confirm → Ready → Completed)
+- **Sales Analytics**: Track total chickens sold, revenue, and breakdown by product
+- **Payment Tracking**: Monitor payment methods and status
+- **SMS Notifications**: Automatically notify customers when orders are ready
 
-## 🎯 MVP Success Metrics
+## 📊 Dashboard Features
 
-- ✅ Reduce average wait time by 50%
-- ✅ Decrease phone call orders by 70%
-- ✅ Customer satisfaction > 4.5/5
-- ✅ 60% digital payments
-
-## 🚀 Deployment
-
-### Backend
-1. Set `ENVIRONMENT=production` in `.env`
-2. Use PostgreSQL for production database
-3. Configure proper CORS origins
-4. Set up SSL/TLS certificates
-5. Use production ASGI server (Gunicorn + Uvicorn)
-
-### Frontend
-1. Build: `npm run build`
-2. Serve static files with Nginx or similar
-3. Configure API URL for production
-4. Set up HTTPS
+The Admin Dashboard provides:
+- **Today's Sales**: Total chickens sold today with breakdown by type (Layer, Broiler, Cockerel, Guinea Fowl, Saso Layers)
+- **Revenue Tracking**: Today's revenue and total revenue
+- **Order Statistics**: Total, pending, and completed orders
+- **Payment Analytics**: Digital payment percentage tracking
 
 ## 🤝 Contributing
 
@@ -234,12 +235,12 @@ See [LICENSE](LICENSE) file for details.
 
 ## 👥 Authors
 
-- ChickOrder Development Team
+- Michael Nkema [mykecodes]
 
 ## 🙏 Acknowledgments
 
 - Built with FastAPI and React
-- Inspired by the need to digitize chicken ordering processes
+- Inspired by the need to help my dad's business and digitize chicken ordering processes
 
 ## 📞 Support
 
