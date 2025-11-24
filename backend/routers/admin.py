@@ -30,16 +30,16 @@ async def get_dashboard_stats(
         Order.status == OrderStatus.COMPLETED
     ).scalar() or 0
     
-    # Total revenue
+    # Total revenue (count all completed orders - revenue is realized when order is picked up)
     total_revenue = db.query(func.sum(Order.total_amount)).filter(
-        Order.payment_status == PaymentStatus.COMPLETED
+        Order.status == OrderStatus.COMPLETED
     ).scalar() or 0.0
     
-    # Today's revenue
+    # Today's revenue (count all completed orders from today)
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     today_revenue = db.query(func.sum(Order.total_amount)).filter(
-        Order.payment_status == PaymentStatus.COMPLETED,
-        Order.created_at >= today_start
+        Order.status == OrderStatus.COMPLETED,
+        Order.completed_at >= today_start
     ).scalar() or 0.0
     
     # Average wait time (time from created to completed)
@@ -104,11 +104,12 @@ async def get_today_sales_stats(
     # Get today's start time
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     
-    # Get all orders from today (any status)
+    # Get all orders completed today (picked up today)
     today_orders = db.query(Order).options(
         joinedload(Order.items).joinedload(OrderItem.product)
     ).filter(
-        Order.created_at >= today_start
+        Order.status == OrderStatus.COMPLETED,
+        Order.completed_at >= today_start
     ).all()
     
     # Calculate statistics
@@ -117,9 +118,8 @@ async def get_today_sales_stats(
     total_revenue = 0.0
     
     for order in today_orders:
-        # Only count revenue for completed payments
-        if order.payment_status == PaymentStatus.COMPLETED:
-            total_revenue += order.total_amount
+        # Count revenue (all orders in this query are completed)
+        total_revenue += order.total_amount
         
         # Count chickens from order items
         for item in order.items:
