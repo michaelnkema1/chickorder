@@ -13,24 +13,11 @@ A web-based ordering and preparation management system for live chicken sellers.
 - **User Authentication**: Secure login and registration system
 - **Responsive Design**: Works seamlessly on mobile and desktop
 
-## 🚀 Quick Deploy to Render.com (Free)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
-
-**Quick Steps:**
-1. Push your code to GitHub
-2. Sign up at [Render.com](https://render.com)
-3. Click "New +" → "Blueprint"
-4. Connect your repo - Render detects `render.yaml`
-5. Click "Apply"
-6. Wait ~5 minutes for deployment
-
-**Detailed Guide**: See [docs/RENDER_DEPLOYMENT.md](docs/RENDER_DEPLOYMENT.md)
-
-Your app will be live at:
+Your app is live at:
 - Frontend: `https://chickorder-frontend.onrender.com`
-- Backend API: `https://chickorder-backend.onrender.com`
-- API Docs: `https://chickorder-backend.onrender.com/docs`
+- Backend API: `https://chickorder.onrender.com`
+- API Docs: `https://chickorder.onrender.com/docs`
 
 ## 🏗️ Architecture
 
@@ -54,7 +41,7 @@ Your app will be live at:
 docker-compose up -d
 
 # Initialize database
-docker exec -it chickorder-backend python init_db.py
+docker exec -it chickorder python init_db.py
 ```
 
 Access at:
@@ -102,8 +89,6 @@ chickorder/
 │   │   ├── pages/          # Page components
 │   │   └── services/       # API client
 │   └── Dockerfile          # Frontend Docker config
-├── docs/                   # Documentation
-│   └── RENDER_DEPLOYMENT.md
 ├── docker-compose.yml      # Local Docker setup
 ├── render.yaml             # Render.com deployment config
 └── README.md               # This file
@@ -113,8 +98,6 @@ chickorder/
 
 - Email: `admin@chickorder.com`
 - Password: `admin123`
-
-⚠️ **IMPORTANT**: Change the admin password immediately after deployment!
 
 ## 📡 API Endpoints
 
@@ -150,15 +133,6 @@ Full documentation: http://localhost:8000/docs
 - React Router v6
 - Axios
 
-## 🆓 Render Free Tier
-
-- PostgreSQL: Free for 90 days
-- Backend: Free (sleeps after 15min inactivity)
-- Frontend: Free (always on)
-- Automatic SSL
-- Auto-deploy from Git
-
-**Note**: Backend may take 30 seconds to wake up from sleep.
 
 ## 📝 License
 
