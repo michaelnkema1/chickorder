@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # App Settings
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
+
+    # CORS — set to the deployed frontend URL in production
+    # e.g. https://chickorder.onrender.com or your Vercel URL
+    FRONTEND_URL: Optional[str] = None
     
     class Config:
         env_file = ".env"

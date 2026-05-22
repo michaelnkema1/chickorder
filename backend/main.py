@@ -21,9 +21,16 @@ app = FastAPI(
 )
 
 # CORS middleware
+# In production, lock origins to the configured FRONTEND_URL.
+# Falls back to wildcard only in local development.
+allowed_origins = (
+    [settings.FRONTEND_URL]
+    if settings.ENVIRONMENT == "production" and settings.FRONTEND_URL
+    else ["*"]
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual frontend URL
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
