@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Start script for ChickOrder backend.
 # 1. Runs Alembic migrations to bring the DB schema up to date.
 # 2. Seeds the database with admin user and sample products (idempotent).

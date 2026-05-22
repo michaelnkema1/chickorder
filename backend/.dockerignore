@@ -1,0 +1,18 @@
+# Python virtual environment — never copy into the image, pip runs inside the container
+venv/
+
+# SQLite dev database — not needed in production
+chickorder.db
+
+# Compiled Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files — secrets are injected at runtime
+.env
+.env.*
+
+# Editor/OS noise
+.DS_Store
+*.swp
