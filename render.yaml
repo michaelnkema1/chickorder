@@ -16,9 +16,7 @@ services:
         # Format: postgresql://postgres.[project-ref]:[password]@aws-X-xx-xxxx-X.pooler.supabase.com:5432/postgres
         sync: false
       - key: FRONTEND_URL
-        # Set to your deployed frontend URL (Vercel, Render static site, etc.)
-        # e.g. https://chickorder-frontend.onrender.com or https://chickorder.vercel.app
-        sync: false
+        value: https://chickorder-frontend.onrender.com
       - key: SECRET_KEY
         generateValue: true
       - key: ALGORITHM

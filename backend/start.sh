@@ -6,10 +6,7 @@
 
 set -e  # Exit immediately if any command fails
 
-echo "==> Running database migrations..."
-alembic upgrade head
-
-echo "==> Seeding database (admin user + sample products)..."
+echo "==> Creating database tables and seeding (admin user + sample products)..."
 python init_db.py
 
 echo "==> Starting server..."
