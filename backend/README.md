@@ -2,196 +2,164 @@
 
 FastAPI backend for the ChickOrder ordering and preparation management system.
 
-## Features
-
-- **Authentication**: JWT-based authentication for admin and customers
-- **Product Management**: CRUD operations for products
-- **Order Management**: Order creation, status updates, and tracking
-- **Payment Integration**: Hubtel and Paystack payment gateways
-- **Notifications**: SMS (Twilio) and WhatsApp notifications
-- **Admin Dashboard**: Statistics and order management
-- **Order State Machine**: Validated order status transitions
-
 ## Tech Stack
 
-- **Framework**: FastAPI
-- **Database**: PostgreSQL
-- **ORM**: SQLAlchemy
-- **Authentication**: JWT (python-jose)
-- **Password Hashing**: bcrypt (passlib)
+| Component | Library/Service |
+|---|---|
+| Framework | FastAPI |
+| Database | Supabase (hosted PostgreSQL) |
+| ORM | SQLAlchemy 2.0 |
+| Auth | JWT via `python-jose` |
+| Password hashing | `passlib[bcrypt]` |
+| SMS | Twilio |
+| Payments | Hubtel, Paystack |
 
-## Quick Start
+## Local Setup
 
-The easiest way to run the backend is using the provided run scripts:
-
-**Linux/Mac:**
-```bash
-cd backend
-./run.sh
-```
-
-**Windows:**
-```cmd
-cd backend
-run.bat
-```
-
-**Cross-platform (Python):**
-```bash
-cd backend
-python run.py
-```
-
-The scripts will automatically:
-- Create a virtual environment if it doesn't exist
-- Install/update dependencies
-- Check and create `.env` file from `.env.example`
-- Initialize the database if needed
-- Start the FastAPI server
-
-## Setup
-
-### 1. Install Dependencies
+### 1. Create a virtual environment
 
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Database Setup
+### 2. Configure environment variables
 
-Create a PostgreSQL database:
+Edit `backend/.env`:
+
+```env
+# Supabase Session Pooler URL (port 5432)
+# Find it at: Supabase → Project Settings → Database → Connection Pooling → Session Mode
+# IMPORTANT: Use the Session Pooler host (*.pooler.supabase.com), NOT the direct connection
+# host (db.*.supabase.co) — the direct host is IPv6-only and unreachable on many networks.
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+
+SECRET_KEY=your-random-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+ADMIN_EMAIL=admin@chickorder.com
+ADMIN_PASSWORD=admin123
+
+ENVIRONMENT=development
+DEBUG=True
+```
+
+> **Password with special characters?** URL-encode them:  
+> `@` → `%40` · `=` → `%3D` · `#` → `%23` · `?` → `%3F`  
+> Example: password `pass@word` becomes `pass%40word` in the URL.
+
+### 3. Initialize the database
+
+Creates all tables and seeds the admin user + sample products:
 
 ```bash
-createdb chickorder_db
+python3 init_db.py
 ```
 
-Or using psql:
+This is **idempotent** — safe to run multiple times without duplicating data.
 
-```sql
-CREATE DATABASE chickorder_db;
-```
+### 4. Start the server
 
-### 3. Environment Configuration
-
-Copy `.env.example` to `.env` and update with your configuration:
-
-```bash
-cp .env.example .env
-```
-
-Update the following in `.env`:
-- `DATABASE_URL`: Your PostgreSQL connection string
-- `SECRET_KEY`: A secure random string for JWT
-- `ADMIN_EMAIL` and `ADMIN_PASSWORD`: Admin credentials
-- Payment provider credentials (Hubtel, Paystack)
-- Notification credentials (Twilio, WhatsApp)
-
-### 4. Initialize Database
-
-Run the initialization script to create tables, admin user, and sample products:
-
-```bash
-python init_db.py
-```
-
-### 5. Run the Server
-
-**Option 1: Using the run script (Recommended)**
-```bash
-# Linux/Mac
-./run.sh
-
-# Windows
-run.bat
-
-# Cross-platform
-python run.py
-```
-
-**Option 2: Manual start**
 ```bash
 uvicorn main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`
-
-API documentation (Swagger UI): `http://localhost:8000/docs`
-Alternative docs (ReDoc): `http://localhost:8000/redoc`
+- API: http://localhost:8000
+- Swagger docs: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
 ## API Endpoints
 
 ### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - Login user
-- `GET /auth/me` - Get current user info
+- `POST /auth/register` — Register new user
+- `POST /auth/login` — Login, returns JWT bearer token
+- `GET /auth/me` — Get current authenticated user
 
 ### Products
-- `GET /products/` - Get all products (public)
-- `GET /products/{id}` - Get single product
-- `POST /products/` - Create product (admin)
-- `PUT /products/{id}` - Update product (admin)
-- `DELETE /products/{id}` - Delete product (admin)
+- `GET /products/` — List all available products (public)
+- `GET /products/{id}` — Get single product (public)
+- `POST /products/` — Create product (admin only)
+- `PUT /products/{id}` — Update product (admin only)
+- `DELETE /products/{id}` — Delete product (admin only)
 
 ### Orders
-- `POST /orders/` - Create new order (public)
-- `GET /orders/` - Get orders (filtered by user role)
-- `GET /orders/{id}` - Get single order
-- `PUT /orders/{id}/status` - Update order status (admin)
-- `POST /orders/{id}/payment` - Initiate payment
+- `POST /orders/` — Create new order (public)
+- `GET /orders/` — List orders (scoped by role)
+- `GET /orders/{id}` — Get single order
+- `PUT /orders/{id}/status` — Update order status (admin only)
+- `POST /orders/{id}/payment` — Initiate payment
 
 ### Admin
-- `GET /admin/dashboard` - Get dashboard statistics
-- `GET /admin/orders/pending` - Get pending orders
+- `GET /admin/dashboard` — Dashboard stats (admin only)
+- `GET /admin/orders/pending` — Pending orders (admin only)
+- `GET /admin/sales/today` — Today's sales (admin only)
 
 ## Order Status Flow
 
 ```
-PENDING → CONFIRMED → PREPARING → READY → COMPLETED
-    ↓         ↓           ↓
+PENDING → CONFIRMED → READY → COMPLETED
+   ↓          ↓         ↓
 CANCELLED  CANCELLED  CANCELLED
 ```
 
 ## Payment Methods
 
-- `cash` - Cash payment
-- `mobile_money` - Mobile money
-- `card` - Card payment
-- `hubtel` - Hubtel payment gateway
-- `paystack` - Paystack payment gateway
+| Method | Key |
+|---|---|
+| Cash on Arrival | `cash` |
+| Mobile Money | `mobile_money` |
+| Card | `card` |
+| Hubtel | `hubtel` |
+| Paystack | `paystack` |
 
-## Development
+## Production Deployment (Render)
 
-### Database Migrations
+The backend deploys as a Docker container on Render. On startup, `start.sh` runs:
 
-For production, use Alembic for database migrations:
+1. `python3 init_db.py` — creates tables + seeds data (idempotent)
+2. `uvicorn main:app ...` — starts the server
 
-```bash
-alembic init alembic
-alembic revision --autogenerate -m "Initial migration"
-alembic upgrade head
+### Required Render environment variables
+
+Set these manually in the Render dashboard for the `chickorder-backend` service:
+
+| Key | Value |
+|---|---|
+| `DATABASE_URL` | Supabase Session Pooler connection string |
+
+All other variables (`SECRET_KEY`, `ADMIN_EMAIL`, etc.) are defined in `render.yaml`.
+
+### CORS
+
+In production, the backend allows requests **only** from the URL in `FRONTEND_URL`.  
+This is set to `https://chickorder-frontend.onrender.com` in `render.yaml`.  
+Update it there if you deploy the frontend to a different host.
+
+## Project Structure
+
 ```
-
-### Testing
-
-Create test files in a `tests/` directory and run with pytest:
-
-```bash
-pytest
+backend/
+├── routers/
+│   ├── auth.py        # /auth endpoints
+│   ├── products.py    # /products endpoints
+│   ├── orders.py      # /orders endpoints
+│   ├── admin.py       # /admin endpoints
+│   └── payments.py    # /orders/{id}/payment
+├── services/          # Business logic helpers
+├── models.py          # SQLAlchemy models (User, Product, Order, etc.)
+├── schemas.py         # Pydantic request/response models
+├── database.py        # Engine + session factory (pool_pre_ping enabled)
+├── config.py          # Pydantic Settings (loaded from .env)
+├── auth.py            # JWT helpers, password hashing, auth dependencies
+├── init_db.py         # Table creation + data seeding script
+├── start.sh           # Docker container entrypoint
+├── main.py            # FastAPI app + CORS middleware
+├── requirements.txt
+└── Dockerfile
 ```
-
-## Production Deployment
-
-1. Set `ENVIRONMENT=production` and `DEBUG=False` in `.env`
-2. Use a proper secret key for `SECRET_KEY`
-3. Configure CORS origins in `main.py`
-4. Use a production ASGI server like Gunicorn with Uvicorn workers
-5. Set up proper database backups
-6. Configure SSL/TLS certificates
 
 ## License
 
 MIT
-
